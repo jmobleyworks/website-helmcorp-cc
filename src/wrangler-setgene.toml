@@ -1,0 +1,21 @@
+name = "setgene"
+main = "setgene-worker.js"
+compatibility_date = "2025-05-11"
+
+account_id = "f07be5f84583d0d100b05aeeae56870b"
+
+[env]
+MASCOM_SECRET = "4f810ba59e8b08d07eb08b64e1e9f8b7211a05c58326bf7b603f095b690f94ad"
+
+[[d1_databases]]
+binding = "HYDRA_DB"
+database_name = "mascom-core"
+database_id = "a737193b-f898-497f-9fe5-ec39d464f0bf"
+
+[env.production]
+name = "setgene"
+
+[[env.production.d1_databases]]
+binding = "HYDRA_DB"
+database_name = "mascom-core"
+database_id = "a737193b-f898-497f-9fe5-ec39d464f0bf"

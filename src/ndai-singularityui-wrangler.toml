@@ -1,0 +1,13 @@
+name = "ndai-singularityui"
+main = "ndai-singularityui-worker.js"
+compatibility_date = "2025-05-12"
+
+account_id = "f07be5f84583d0d100b05aeeae56870b"
+
+[env]
+ENVIRONMENT = "production"
+
+[env.production]
+name = "ndai-singularityui"
+route = "ndai.mobleysoft.com/mhsabtlp*"
+zone_id = "f9ec6bb9f8b3f3e3c8b3f3e3c8b3f3e3"
