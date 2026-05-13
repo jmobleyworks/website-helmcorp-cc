@@ -1,4 +1,4 @@
-name: Deploy to Cloudflare Pages
+name: Deploy helmcorp.cc to Cloudflare Pages
 
 on:
   push:
@@ -16,9 +16,7 @@ jobs:
       - name: Install Wrangler
         run: npm install -g wrangler
       - name: Deploy to Cloudflare Pages
-        run: |
-          wrangler pages deploy src --project-name $PROJECT_NAME --branch main
+        run: wrangler pages deploy src --project-name helmcorp-cc --branch main
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          PROJECT_NAME: ${{ env.PROJECT_NAME }}
