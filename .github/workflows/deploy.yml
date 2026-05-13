@@ -21,6 +21,7 @@ jobs:
 
           # Prepare JSON payload
           JSON_PAYLOAD=$(jq -n --argjson manifest "$MANIFEST" '{manifest: $manifest}')
+          echo "JSON Payload: $JSON_PAYLOAD"
 
           # Create deployment
           DEPLOY_RESPONSE=$(curl -s -X POST "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/${PROJECT_NAME}/deployments" \
