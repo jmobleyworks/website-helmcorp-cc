@@ -15,14 +15,19 @@ jobs:
           echo "Deploying $PROJECT_NAME..."
 
           # Create deployment manifest from src directory
-          MANIFEST=$(cd src && find . -type f -exec sha256sum {} \; | awk '{print $2, $1}' | sed 's/\.\///' | jq -R 'split(" ") | {(.[0]): .[1]}' | jq -s 'add')
+          cd src
+          MANIFEST=$(find . -type f -exec sha256sum {} \; | awk '{print $2, $1}' | sed 's/\.\///' | jq -R 'split(" ") | {(.[0]): .[1]}' | jq -s 'add')
+          cd ..
+
+          # Prepare JSON payload
+          JSON_PAYLOAD=$(jq -n --argjson manifest "$MANIFEST" '{manifest: $manifest}')
 
           # Create deployment
           DEPLOY_RESPONSE=$(curl -s -X POST "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/${PROJECT_NAME}/deployments" \
             -H "X-Auth-Email: ${{ secrets.CLOUDFLARE_EMAIL }}" \
             -H "X-Auth-Key: ${{ secrets.CLOUDFLARE_API_KEY }}" \
             -H "Content-Type: application/json" \
-            -d "{\"manifest\": $MANIFEST}")
+            -d "$JSON_PAYLOAD")
 
           DEPLOYMENT_ID=$(echo "$DEPLOY_RESPONSE" | jq -r '.result.id // empty')
 
