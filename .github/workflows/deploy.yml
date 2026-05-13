@@ -15,4 +15,4 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           projectName: helmcorp-cc
           directory: src
-          productionBranch: main
+          branch: main
