@@ -14,50 +14,17 @@ jobs:
           PROJECT_NAME=$(basename $(pwd) | sed 's/website-//')
           echo "Deploying $PROJECT_NAME..."
 
-          # Create deployment manifest from src directory
+          # Create tarball of src directory for deployment
           cd src
-          MANIFEST=$(find . -type f -exec sha256sum {} \; | awk '{print $2, $1}' | sed 's/\.\///' | jq -R 'split(" ") | {(.[0]): .[1]}' | jq -s 'add')
+          tar -czf ../deployment.tar.gz .
           cd ..
 
-          # Prepare JSON payload
-          JSON_PAYLOAD=$(jq -n --argjson manifest "$MANIFEST" '{manifest: $manifest}')
-          echo "JSON Payload: $JSON_PAYLOAD"
-
-          # Create deployment
-          DEPLOY_RESPONSE=$(curl -s -X POST "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/${PROJECT_NAME}/deployments" \
+          # Deploy to Cloudflare Pages
+          curl -X POST \
+            "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/${PROJECT_NAME}/deployments" \
             -H "X-Auth-Email: ${{ secrets.CLOUDFLARE_EMAIL }}" \
             -H "X-Auth-Key: ${{ secrets.CLOUDFLARE_API_KEY }}" \
-            -H "Content-Type: application/json" \
-            -d "$JSON_PAYLOAD")
+            -F "manifest=@deployment.tar.gz" \
+            -F "branch=main"
 
-          DEPLOYMENT_ID=$(echo "$DEPLOY_RESPONSE" | jq -r '.result.id // empty')
-
-          if [ -z "$DEPLOYMENT_ID" ]; then
-            echo "Failed to create deployment:"
-            echo "$DEPLOY_RESPONSE" | jq '.'
-            exit 1
-          fi
-
-          echo "Deployment created: $DEPLOYMENT_ID"
-
-          # Upload files
-          cd src
-          for file in $(find . -type f); do
-            curl -s -X POST "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/${PROJECT_NAME}/deployments/${DEPLOYMENT_ID}/files" \
-              -H "X-Auth-Email: ${{ secrets.CLOUDFLARE_EMAIL }}" \
-              -H "X-Auth-Key: ${{ secrets.CLOUDFLARE_API_KEY }}" \
-              -F "files=@${file}" > /dev/null
-          done
-
-          echo "Files uploaded"
-
-          cd ..
-
-          # Finalize deployment
-          curl -s -X POST "https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/pages/projects/${PROJECT_NAME}/deployments/${DEPLOYMENT_ID}/finalize" \
-            -H "X-Auth-Email: ${{ secrets.CLOUDFLARE_EMAIL }}" \
-            -H "X-Auth-Key: ${{ secrets.CLOUDFLARE_API_KEY }}" \
-            -H "Content-Type: application/json" \
-            -d '{}'
-
-          echo "Deployment finalized: https://${PROJECT_NAME}.pages.dev"
+          echo "Deployment submitted to https://${PROJECT_NAME}.pages.dev"
