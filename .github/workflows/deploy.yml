@@ -7,33 +7,16 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
-      - name: Deploy to Cloudflare Pages
-        env:
-          CLOUDFLARE_API_KEY: ${{ secrets.CLOUDFLARE_API_KEY }}
-          CLOUDFLARE_EMAIL: ${{ secrets.CLOUDFLARE_EMAIL }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: |
-          PROJECT_NAME=$(basename $(pwd) | sed 's/website-//')
-          echo "Deploying $PROJECT_NAME to Cloudflare Pages..."
-
-          # Create tarball with index.html from repo root
-          tar -czf deployment.tar.gz index.html
-
-          # Upload to Cloudflare Pages API
-          RESPONSE=$(curl -s -X POST \
-            "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/pages/projects/${PROJECT_NAME}/deployments" \
-            -H "X-Auth-Email: ${CLOUDFLARE_EMAIL}" \
-            -H "X-Auth-Key: ${CLOUDFLARE_API_KEY}" \
-            -F "manifest=@deployment.tar.gz" \
-            -F "branch=main")
-
-          echo "$RESPONSE" | jq .
-
-          if echo "$RESPONSE" | jq -e '.success' > /dev/null; then
-            echo "✓ Deployment successful for $PROJECT_NAME"
-          else
-            echo "✗ Deployment failed for $PROJECT_NAME"
-            exit 1
-          fi
+      - name: Publish to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: ${{ github.event.repository.name | replace('website-', '') }}
+          directory: ./
+          branch: main
+          wranglerVersion: '3'
